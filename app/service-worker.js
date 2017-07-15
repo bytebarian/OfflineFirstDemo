@@ -153,27 +153,21 @@ self.addEventListener('fetch', function(event) {
                         store.put(event.request.url, response.clone());
                         console.log('[fetch] Cache json result for url: ' + event.request.url);
                         return response;
-                   })}).catch(function(err){
-                         onlineMode = false;
-                         return cache || fetch(event.request);
+                   })});
               });
-              } else {
+              } 
+              else {
                   return cache || fetch(event.request);
               }
-          } else if (cache) {
+          } 
+          else if (cache) {
               console.log('[fetch] Returning from ServiceWorker cache: ', event.request.url);
               return cache;
-          } else if(REQUEST_TO_CACHE.indexOf(event.request.url) > -1){
+          } 
+          else if(REQUEST_TO_CACHE.indexOf(event.request.url) > -1){
               if(onlineMode){
                   return fetch(event.request).then(function(response){
                       return response;
-                  }).catch(function(err){
-                      onlineMode = false;
-                      return enqueue(event.request).then(function(){
-                        return new Promise(function(resolve, reject){
-                          return new Response({status: 200}).clone();
-                        })
-                      })
                   })
               } else {
                   return enqueue(event.request).then(function(){
@@ -182,7 +176,8 @@ self.addEventListener('fetch', function(event) {
                       })
                   })
               }
-          }  else {
+          }  
+          else {
               console.log('[fetch] Returning from server: ', event.request.url);
               return fetch(event.request);
           }
