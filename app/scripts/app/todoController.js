@@ -54,12 +54,14 @@
          * update completed state of the given task
          */
         function updateTask(task){
-            $http.post('http://localhost:3000/update', task).then(function(response){
-                refreshTasks();
-            }).catch(function(err){
-                    console.log(err);
-            });
+            db.post(task)
+              .then(refreshTasks)
+              .catch(error);
         }
+        
+        function error(err) {
+            console.log(err);
+          }
 
 		/**
 		 * Add new task to collection.
@@ -68,18 +70,14 @@
 			// Only add task if something actually exists
 			if (todo.inputTask) {
                 var newTask = {
-                    "_id": todo.inputTask,
-                    "text": todo.inputTask,
-                    "completed": false
+                    _id: new Date().toISOString(),
+                    text: todo.inputTask,
+                    completed: false
                 };
 
-                $http.post('http://localhost:3000/add', newTask).then(function(response){
-                    todo.tasks.push(newTask);
-				    todo.incompleteTasks.push(newTask);
-				    todo.inputTask = "";
-                }).catch(function(err){
-                    console.log(err);
-                });
+                db.post(newTask)
+                  .then(refreshTasks)
+                  .catch(error);
 			}
 		}
 
