@@ -1,8 +1,11 @@
 (function() {
 
 	angular
-		.module('app')
+		.module('app', ['pouchdb'])
 		.config(['$mdThemingProvider', '$httpProvider', configure]);
+    angular.service('service', function(pouchDB) {
+      var db = pouchDB('name');
+    });
 
 	function configure($mdThemingProvider, $httpProvider) {
 	    // Configure a dark theme with primary foreground yellow

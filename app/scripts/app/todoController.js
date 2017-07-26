@@ -4,8 +4,8 @@
 		.module('app', ['ngMaterial', 'ngAnimate'])
 		.controller('TodoController', ['$scope', '$http', TodoController]);
 
-	function TodoController($scope, $http) {
-
+	function TodoController($scope, $http, pouchDB) {
+        var db = pouchDB('tododb');
 		// List of bindable properties and methods
 		var todo = this;
 		todo.tasks = [];
@@ -17,6 +17,11 @@
         todo.updateTask = updateTask;
 		todo.showCompleted = false;
 		todo.toggleCompletedTasks = toggleCompletedTasks;
+        
+        db.changes({
+          since: 'now',
+          live: true
+        }).on('change', activate);
 
 		activate();
 
@@ -25,10 +30,8 @@
 		 */
 		function activate() {
 			// Fill sample tasks
-            $http.post('http://localhost:3000/tasks', null).then(function(response){
-                response.data.rows.forEach(function(row, index, arr) {
-                   todo.tasks.push(row.doc);
-                });
+            db.allDocs({include_docs: true, descending: true}, function(err, doc) {
+                tasks = doc.rows;
                 refreshTasks();
             });
 		}
