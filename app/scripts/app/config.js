@@ -1,9 +1,14 @@
 (function() {
 
 	angular
-		.module('app', ['ngMaterial', 'pouchdb', 'ngAnimate'])
+		.module('app', ['ngMaterial', 'ngAnimate'])
+        .run(function($pouchDB) {
+            $pouchDB.setDatabase("todos");
+            $pouchDB.sync("http://127.0.0.1:5984/todos");
+        })
 		.config(['$mdThemingProvider', '$httpProvider', configure])
-        .controller('TodoController', ['$scope', '$http', 'pouchdb', TodoController]);
+        .service("$pouchDB", ["$rootScope", "$q", PouchDBService])
+        .controller('TodoController', TodoController);
 
 	function configure($mdThemingProvider, $httpProvider) {
 	    // Configure a dark theme with primary foreground yellow
@@ -17,7 +22,7 @@
         delete $httpProvider.defaults.headers.common['X-Requested-With'];
 	}
     
-    function TodoController($scope, $http, pouchDB) {
+    function TodoController($scope, $http, $pouchDB) {
         var db = pouchDB('todos');
         var remoteDB = 'http://127.0.0.1:5984/todos'
 		// List of bindable properties and methods
@@ -32,10 +37,7 @@
 		todo.showCompleted = false;
 		todo.toggleCompletedTasks = toggleCompletedTasks;
         
-        db.changes({
-          since: 'now',
-          live: true
-        }).on('change', activate);
+        $pouchDB.startListening();
 
 		activate();
 
@@ -44,23 +46,10 @@
 		 */
 		function activate() {
 			// Fill sample tasks
-            db.allDocs({include_docs: true, descending: true}, function(err, doc) {
-                tasks = doc.rows;
+            $pouchDB.allDocs().then(function(result){
+                tasks = result.rows;
                 refreshTasks();
-            });
-            
-            db.sync(remoteDB, {
-              live: true,
-              retry: true
-            }).on('change', function (change) {
-              refreshTasks()
-            }).on('paused', function (info) {
-              // replication was paused, usually because of a lost connection
-            }).on('active', function (info) {
-              // replication was resumed
-            }).on('error', function (err) {
-              // totally unhandled error (shouldn't happen)
-            });
+            })
 		}
 
 		/**
@@ -81,7 +70,7 @@
          * update completed state of the given task
          */
         function updateTask(task){
-            db.post(task)
+            $pouchDB.save(task)
               .then(refreshTasks)
               .catch(error);
         }
@@ -102,7 +91,7 @@
                     completed: false
                 };
 
-                db.post(newTask)
+                $pouchDB.save(newTask)
                   .then(refreshTasks)
                   .catch(error);
 			}
@@ -116,5 +105,69 @@
 		}
 
 	}
+    
+    function PouchDBService($rootScope, $q){
+        var database;
+        var changeListener;
+
+        this.setDatabase = function(databaseName) {
+            database = new PouchDB(databaseName);
+        }
+
+        this.startListening = function() {
+            changeListener = database.changes({
+                live: true,
+                include_docs: true
+            }).on("change", function(change) {
+                if(!change.deleted) {
+                    $rootScope.$broadcast("$pouchDB:change", change);
+                } else {
+                    $rootScope.$broadcast("$pouchDB:delete", change);
+                }
+            });
+        }
+
+        this.stopListening = function() {
+            changeListener.cancel();
+        }
+
+        this.sync = function(remoteDatabase) {
+            database.sync(remoteDatabase, {live: true, retry: true});
+        }
+
+        this.save = function(jsonDocument) {
+            var deferred = $q.defer();
+            if(!jsonDocument._id) {
+                database.post(jsonDocument).then(function(response) {
+                    deferred.resolve(response);
+                }).catch(function(error) {
+                    deferred.reject(error);
+                });
+            } else {
+                database.put(jsonDocument).then(function(response) {
+                    deferred.resolve(response);
+                }).catch(function(error) {
+                    deferred.reject(error);
+                });
+            }
+            return deferred.promise;
+        }
+
+        this.delete = function(documentId, documentRevision) {
+            return database.remove(documentId, documentRevision);
+        }
+
+        this.get = function(documentId) {
+            return database.get(documentId);
+        }
+        
+        this.allDocs = function(){
+            return database.allDocs({include_docs: true, attachments: true});
+        }
+
+        this.destroy = function() {
+            database.destroy();
+        }
+    }
 
 })();
