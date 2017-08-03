@@ -2,12 +2,12 @@
 
 	angular
 		.module('app', ['ngMaterial', 'ngAnimate'])
-        .run(function($pouchDB) {
-            $pouchDB.setDatabase("todos");
-            $pouchDB.sync("http://127.0.0.1:5984/todos");
-        })
-		.config(['$mdThemingProvider', '$httpProvider', configure])
-        .service("$pouchDB", ["$rootScope", "$q", PouchDBService])
+        .config(['$mdThemingProvider', '$httpProvider', configure])  
+        .factory("pouchDB", ["$rootScope", "$q", PouchDBService])
+        .run(function(pouchDB) {
+            pouchDB.setDatabase("todos");
+            pouchDB.sync("http://127.0.0.1:5984/todos");
+        })	  
         .controller('TodoController', TodoController);
 
 	function configure($mdThemingProvider, $httpProvider) {
@@ -22,9 +22,7 @@
         delete $httpProvider.defaults.headers.common['X-Requested-With'];
 	}
     
-    function TodoController($scope, $http, $pouchDB) {
-        var db = pouchDB('todos');
-        var remoteDB = 'http://127.0.0.1:5984/todos'
+    function TodoController($scope, $rootScope, $http, pouchDB) {
 		// List of bindable properties and methods
 		var todo = this;
 		todo.tasks = [];
@@ -37,7 +35,15 @@
 		todo.showCompleted = false;
 		todo.toggleCompletedTasks = toggleCompletedTasks;
         
-        $pouchDB.startListening();
+        pouchDB.startListening();
+        
+        $rootScope.$on("$pouchDB:change", function(event, data){
+            activate();
+        });
+        
+        $rootScope.$on("$pouchDB:delete", function(event, data){
+            activate();
+        });
 
 		activate();
 
@@ -46,7 +52,7 @@
 		 */
 		function activate() {
 			// Fill sample tasks
-            $pouchDB.allDocs().then(function(result){
+            pouchDB.allDocs().then(function(result){
                 tasks = result.rows;
                 refreshTasks();
             })
@@ -70,8 +76,8 @@
          * update completed state of the given task
          */
         function updateTask(task){
-            $pouchDB.save(task)
-              .then(refreshTasks)
+            pouchDB.save(task)
+              .then(activate)
               .catch(error);
         }
         
@@ -91,8 +97,8 @@
                     completed: false
                 };
 
-                $pouchDB.save(newTask)
-                  .then(refreshTasks)
+                pouchDB.save(newTask)
+                  .then(activate)
                   .catch(error);
 			}
 		}
@@ -168,6 +174,8 @@
         this.destroy = function() {
             database.destroy();
         }
+        
+        return this;
     }
 
 })();
