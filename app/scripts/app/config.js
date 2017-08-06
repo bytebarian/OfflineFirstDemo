@@ -52,11 +52,17 @@
 		 */
 		function activate() {
 			// Fill sample tasks
+            console.log("get all documents");
             pouchDB.allDocs().then(function(result){
-                tasks = result.rows;
+                result.rows.forEach(addToTasks);
+                console.log(todo.tasks);
                 refreshTasks();
             })
 		}
+        
+        function addToTasks(item, index){
+            todo.tasks.push(item.doc);
+        }
 
 		/**
 		 * Run through all tasks and see which are complete and which are not.
@@ -76,6 +82,7 @@
          * update completed state of the given task
          */
         function updateTask(task){
+            console.log(task);
             pouchDB.save(task)
               .then(activate)
               .catch(error);
@@ -96,7 +103,7 @@
                     text: todo.inputTask,
                     completed: false
                 };
-
+                console.log(newTask);
                 pouchDB.save(newTask)
                   .then(activate)
                   .catch(error);
