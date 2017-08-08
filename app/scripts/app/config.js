@@ -56,7 +56,7 @@
             pouchDB.allDocs().then(function(result){
                 result.rows.forEach(addToTasks);
                 console.log(todo.tasks);
-                refreshTasks();
+                $scope.$apply(refreshTasks);
             })
 		}
         
