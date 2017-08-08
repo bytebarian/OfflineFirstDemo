@@ -1,7 +1,7 @@
 /* eslint-env es6 */
 /* eslint no-unused-vars: 0 */
 /* global importScripts, localforage */
-importScripts('./localforage.js');
+//importScripts('./localforage.js');
 
 var CACHE_NAME = 'demo-dependencies-cache';
 var REQUIRED_FILES = [
@@ -154,8 +154,7 @@ self.addEventListener('fetch', function(event) {
                         console.log('[fetch] Cache json result for url: ' + event.request.url);
                         return response;
                    })});
-              });
-              } 
+              }
               else {
                   return cache || fetch(event.request);
               }
