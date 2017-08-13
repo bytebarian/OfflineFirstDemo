@@ -76,6 +76,7 @@
 				else
 					todo.incompleteTasks.push(task);
 			});
+            $scope.$apply()
 		}
 
         /**
