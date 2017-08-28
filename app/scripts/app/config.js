@@ -38,30 +38,19 @@
         pouchDB.startListening();
         
         $rootScope.$on("$pouchDB:change", function(event, data){
-            activate();
+            tryAddTask(data.doc);
+            refreshTasks();
         });
         
-        $rootScope.$on("$pouchDB:delete", function(event, data){
-            activate();
-        });
-
-		activate();
-
-		/**
-		 * Initialize sample controller data.
-		 */
-		function activate() {
-			// Fill sample tasks
-            console.log("get all documents");
-            pouchDB.allDocs().then(function(result){
-                result.rows.forEach(addToTasks);
-                console.log(todo.tasks);
-                $scope.$apply(refreshTasks);
-            })
-		}
-        
-        function addToTasks(item, index){
-            todo.tasks.push(item.doc);
+        function tryAddTask(item){
+            var found = null;
+            todo.tasks.forEach(function(task, index, arr) {
+				if (task._id == item._id)
+					found = task;
+			});
+            if(found === null){
+                todo.tasks.push(item);
+            }
         }
 
 		/**
@@ -83,10 +72,8 @@
          * update completed state of the given task
          */
         function updateTask(task){
-            console.log(task);
-            pouchDB.save(task)
-              .then(activate)
-              .catch(error);
+            console.log(task);            
+            pouchDB.update(task);
         }
         
         function error(err) {
@@ -106,8 +93,6 @@
                 };
                 console.log(newTask);
                 pouchDB.save(newTask)
-                  .then(activate)
-                  .catch(error);
 			}
 		}
 
@@ -149,22 +134,22 @@
             database.sync(remoteDatabase, {live: true, retry: true});
         }
 
-        this.save = function(jsonDocument) {
-            var deferred = $q.defer();
-            if(!jsonDocument._id) {
-                database.post(jsonDocument).then(function(response) {
-                    deferred.resolve(response);
-                }).catch(function(error) {
-                    deferred.reject(error);
-                });
-            } else {
-                database.put(jsonDocument).then(function(response) {
-                    deferred.resolve(response);
-                }).catch(function(error) {
-                    deferred.reject(error);
-                });
-            }
-            return deferred.promise;
+        this.save = function(doc) {
+            return database.put(doc);
+        }
+        
+        this.update = function(doc){
+            database.get(doc._id)
+                .then(function(d){
+                    d.completed = !d.completed;
+                    database.put(d)
+                    .then(function(x){
+                        database.get(doc._id)
+                        .then(function(dd){
+                            doc = dd;
+                        })
+                    })
+                })
         }
 
         this.delete = function(documentId, documentRevision) {
@@ -173,10 +158,6 @@
 
         this.get = function(documentId) {
             return database.get(documentId);
-        }
-        
-        this.allDocs = function(){
-            return database.allDocs({include_docs: true, attachments: true});
         }
 
         this.destroy = function() {
