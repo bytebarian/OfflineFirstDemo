@@ -1,7 +1,6 @@
 /* eslint-env es6 */
 /* eslint no-unused-vars: 0 */
 /* global importScripts, localforage */
-//importScripts('./localforage.js');
 
 var CACHE_NAME = 'demo-dependencies-cache';
 var REQUIRED_FILES = [
@@ -86,6 +85,7 @@ function flushQueue() {
 }
 
 function enqueue(request) {
+  importScripts('./localforage.js');
   return serialize(request).then(function(serialized) {
     localforage.getItem('queue').then(function(queue) {
       queue = queue || [];
@@ -144,7 +144,7 @@ self.addEventListener('install', function(event) {
 
 self.addEventListener('fetch', function(event) {
   event.respondWith(
-    caches.match(event.request)
+    caches.match(event.request.url)
       .then(function(cache) {
           if(RESPONSE_TO_CACHE.indexOf(event.request.url) > -1){
               if(onlineMode){
@@ -153,7 +153,10 @@ self.addEventListener('fetch', function(event) {
                         store.put(event.request.url, response.clone());
                         console.log('[fetch] Cache json result for url: ' + event.request.url);
                         return response;
-                   })});
+                   })}).catch(function(err){
+                      onlineMode = false;
+                      return cache || fetch(event.request);
+                  });
               }
               else {
                   return cache || fetch(event.request);
@@ -167,6 +170,13 @@ self.addEventListener('fetch', function(event) {
               if(onlineMode){
                   return fetch(event.request).then(function(response){
                       return response;
+                  }).catch(function(err){
+                      onlineMode = false;
+                        return enqueue(event.request).then(function(){
+                            return new Promise(function(resolve, reject){
+                                return new Response({status: 200}).clone();
+                            })
+                        })
                   })
               } else {
                   return enqueue(event.request).then(function(){

@@ -52,7 +52,8 @@
          */
         function updateTask(task){
             $http.post('http://localhost:3000/update', task).then(function(response){
-                refreshTasks();
+                //refreshTasks();
+                activate()
             }).catch(function(err){
                     console.log(err);
             });
@@ -72,8 +73,8 @@
 
                 $http.post('http://localhost:3000/add', newTask).then(function(response){
                     todo.tasks.push(newTask);
-				    todo.incompleteTasks.push(newTask);
-				    todo.inputTask = "";
+				    //todo.incompleteTasks.push(newTask);
+                    activate()
                 }).catch(function(err){
                     console.log(err);
                 });
