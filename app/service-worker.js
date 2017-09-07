@@ -30,6 +30,7 @@ var REQUEST_TO_CACHE = [
 var heartbeatUrl = 'http://localhost:3000/heartbeat';
 var onlineMode = true;
 var db = null;
+var queue = [];
 
 function serialize(request) {
   var headers = {};
@@ -72,28 +73,30 @@ function sendInOrder(requests) {
 }
 
 function flushQueue() {
-    return localforage.getItem('queue').then(function(queue) {
+    /*return localforage.getItem('queue').then(function(queue) {
     queue = queue || [];
         if (!queue.length) {
       return Promise.resolve();
-    }
+    }*/
     console.log('Sending ', queue.length, ' requests...');
     return sendInOrder(queue).then(function() {
-        return localforage.setItem('queue', []);
+        //return localforage.setItem('queue', []);
+        queue = [];
     });
-  });
+  //});
 }
 
 function enqueue(request) {
-  importScripts('./localforage.js');
+  //importScripts('./localforage.js');
   return serialize(request).then(function(serialized) {
-    localforage.getItem('queue').then(function(queue) {
+    /*localforage.getItem('queue').then(function(queue) {
       queue = queue || [];
       queue.push(serialized);
       return localforage.setItem('queue', queue).then(function() {
         console.log(serialized.method, serialized.url, 'enqueued!');
       });
-    });
+    });*/
+      queue.push(serialized);
   });
 }
 
