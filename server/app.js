@@ -24,6 +24,7 @@ app.post('/tasks', function (req, res) {
 
 app.post('/add', jsonParser, function(req, res){
     db.put(req.body).then(function(resuponse){
+        console.log('task added!');
         res.send(200);
     }).catch(function(err){
         console.log(err);

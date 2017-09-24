@@ -31,6 +31,7 @@ var heartbeatUrl = 'http://localhost:3000/heartbeat';
 var onlineMode = true;
 var db = null;
 var queue = [];
+var fallbackResponse = {status: 200};
 
 function serialize(request) {
   var headers = {};
@@ -73,30 +74,29 @@ function sendInOrder(requests) {
 }
 
 function flushQueue() {
-    /*return localforage.getItem('queue').then(function(queue) {
+    return localforage.getItem('queue').then(function(queue) {
     queue = queue || [];
         if (!queue.length) {
       return Promise.resolve();
-    }*/
+    }
     console.log('Sending ', queue.length, ' requests...');
     return sendInOrder(queue).then(function() {
-        //return localforage.setItem('queue', []);
-        queue = [];
+        return localforage.setItem('queue', []);
+        //queue = [];
     });
-  //});
+  });
 }
 
 function enqueue(request) {
-  //importScripts('./localforage.js');
+  importScripts('./localforage.js');
   return serialize(request).then(function(serialized) {
-    /*localforage.getItem('queue').then(function(queue) {
+    localforage.getItem('queue').then(function(queue) {
       queue = queue || [];
       queue.push(serialized);
       return localforage.setItem('queue', queue).then(function() {
         console.log(serialized.method, serialized.url, 'enqueued!');
       });
-    });*/
-      queue.push(serialized);
+    });
   });
 }
 
@@ -138,7 +138,7 @@ self.addEventListener('install', function(event) {
         console.log('[install] All required resources have been cached, ' +
           'we\'re good!');
 
-        setInterval(checkServerHeartbeat, 1*60*1000);
+        setInterval(checkServerHeartbeat, 1*10*1000);
 
         return self.skipWaiting();
       })
@@ -175,18 +175,16 @@ self.addEventListener('fetch', function(event) {
                       return response;
                   }).catch(function(err){
                       onlineMode = false;
-                        return enqueue(event.request).then(function(){
-                            return new Promise(function(resolve, reject){
-                                return new Response({status: 200}).clone();
-                            })
-                        })
+                      enqueue(event.request);
+                      return new Response(JSON.stringify(fallbackResponse), {
+                          headers: {'Content-Type': 'application/json'}
+                        });
                   })
               } else {
-                  return enqueue(event.request).then(function(){
-                      return new Promise(function(resolve, reject){
-                          return new Response({status: 200}).clone();
-                      })
-                  })
+                  enqueue(event.request);
+                  return new Response(JSON.stringify(fallbackResponse), {
+                          headers: {'Content-Type': 'application/json'}
+                        });
               }
           }  
           else {
