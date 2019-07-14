@@ -1,54 +1,61 @@
 var express = require('express');
 var PouchDB = require('pouchdb');
 var cors = require('cors');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+var SuperLogin = require('superlogin');
 
 var app = express();
 app.use(cors());
 
-// create/open pouchDB database
-var db = new PouchDB('test');
 // create application/json parser
-var jsonParser = bodyParser.json()
+var jsonParser = bodyParser.json();
 
+var config = {
+  dbServer: {
+    protocol: 'http://',
+    host: 'localhost:5984',
+    user: '',
+    password: '',
+    userDB: 'sl-users',
+    couchAuthDB: '_users'
+  },
+  mailer: {
+    fromEmail: 'gmail.user@gmail.com',
+    options: {
+      service: 'Gmail',
+        auth: {
+          user: 'gmail.user@gmail.com',
+          pass: 'userpass'
+        }
+    }
+  },
+  security: {
+    maxFailedLogins: 3,
+    lockoutTime: 600,
+    tokenLife: 86400,
+    loginOnRegistration: true,
+  },
+  userDBs: {
+    defaultDBs: {
+      private: ['supertest']
+    },
+    model: {
+      supertest: {
+        permissions: ['_reader', '_writer', '_replicator']
+      }
+    }
+  },
+  providers: {
+    local: true
+  }
+}
 
-app.post('/tasks', function (req, res) {
-    db.allDocs({include_docs: true}).then(function(docs){
-        res.send(docs);
-    }).catch(function(err){
-        console.log(err);
-        res.send(500);
-    })
+// Initialize SuperLogin
+var superlogin = new SuperLogin(config);
 
-});
+// Mount SuperLogin's routes to our app
+app.use('/auth', superlogin.router);
 
-app.post('/add', jsonParser, function(req, res){
-    db.put(req.body).then(function(resuponse){
-        res.send(200);
-    }).catch(function(err){
-        console.log(err);
-        res.send(500);
-    })
-});
-
-app.post('/update', jsonParser, function(req, res){
-    console.log('searching index: ' + req.body.text);
-    db.get(req.body.text).then(function(doc){
-        doc.completed = req.body.completed;
-        console.log('set task complete status to: ' + req.body.completed);
-        return db.put(doc);
-    }).then(function(){
-        console.log('task updated!');
-        res.send(200);
-    }).catch(function(err){
-        console.log(err);
-        res.send(500);
-    })
-});
-
-app.post('/heartbeat', function(req, res){
-    res.send(200);
-});
 
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
