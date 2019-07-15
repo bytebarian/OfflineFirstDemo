@@ -34,6 +34,8 @@
         todo.updateTask = updateTask;
 		todo.showCompleted = false;
 		todo.toggleCompletedTasks = toggleCompletedTasks;
+        todo.username = "";
+        todo.password = "";
         
         pouchDB.startListening();
         
@@ -102,6 +104,27 @@
 		function toggleCompletedTasks() {
 			todo.showCompleted = !todo.showCompleted;
 		}
+        
+        function init(details){
+            
+        }
+        
+        function login(){
+            let headers = new Headers();
+            headers.append('Content-Type', 'application/json');
+            
+            let credentials = {
+                username = todo.username,
+                password = todo.password
+            };
+            
+            this.http.post('http://localhost:3000/auth/login', JSON.stringify(credentials), {headers: headers})
+                .subscribe(res => {
+                  this.todoService.init(res.json());
+                }, (err) => {
+                  console.log(err);
+                });
+        }
 
 	}
     

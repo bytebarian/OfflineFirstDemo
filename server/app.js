@@ -3,6 +3,7 @@ var PouchDB = require('pouchdb');
 var cors = require('cors');
 var bodyParser = require('body-parser');
 var SuperLogin = require('superlogin');
+var OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
 
 var app = express();
 app.use(cors());
