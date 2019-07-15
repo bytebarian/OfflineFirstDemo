@@ -10,26 +10,9 @@
 <body>
 
 	<div ng-controller="TodoController as todo" layout="column">
-        
-        <!-- Login form -->
-		<md-content md-theme="docs-dark" ng-show="!todo.authenticated">
-
-			<md-input-container flex>
-					<label>Login</label>
-					<input ng-model="todo.username">
-				</md-input-container>
-                
-                <md-input-container flex>
-					<label>Password</label>
-					<input ng-model="todo.password" type="password">
-				</md-input-container>
-
-				<md-button class="md-icon-button md-primary" aria-label="Login" ng-click="todo.login()">Login</md-button>
-
-		</md-content>
 
 		<!-- Input tasks -->
-		<md-content md-theme="docs-dark" ng-show="todo.authenticated">
+		<md-content md-theme="docs-dark">
 
 			<form ng-submit="todo.addTask()" layout="row" layout-align="center center" class="todo-form">
 
@@ -45,7 +28,7 @@
 		</md-content>
 
 		<!-- Todo content -->
-		<md-content class="content-container" layout="column" layout-align="center center" ng-show="todo.authenticated">
+		<md-content class="content-container" layout="column" layout-align="center center">
 
 			<!-- Indicator and status message -->
 			<label class="todo-indicator" ng-class="todo.incompleteTasks.length ? 'todo-indicator-incomplete' : 'todo-indicator-complete'">{{ todo.incompleteTasks.length ? todo.incompleteTasks.length : "&#10004;" }}</label>

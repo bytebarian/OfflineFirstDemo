@@ -12,10 +12,10 @@
     "body-parser": "^1.15.2",
     "cors": "^2.7.1",
     "express": "^4.14.0",
-    "pouchdb": "^5.4.5",
-    "superlogin": "^0.6.1",
     "passport": "*",
-    "passport-azure-ad": "^3.0.12"
-
+    "passport-azure-ad": "^3.0.12",
+    "passport-azure-ad-oauth2": "0.0.4",
+    "pouchdb": "^5.4.5",
+    "superlogin": "^0.6.1"
   }
 }

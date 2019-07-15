@@ -36,7 +36,6 @@
 		todo.toggleCompletedTasks = toggleCompletedTasks;
         todo.username = "";
         todo.password = "";
-        todo.authenticated = false;
         
         pouchDB.startListening();
         
@@ -110,16 +109,16 @@
             
         }
         
-        todo.login = function login(){
+        function login(){
             let headers = new Headers();
             headers.append('Content-Type', 'application/json');
             
             let credentials = {
-                username: todo.username,
-                password: todo.password
+                username = todo.username,
+                password = todo.password
             };
             
-            $http.post('http://localhost:3000/auth/login', JSON.stringify(credentials), {headers: headers})
+            this.http.post('http://localhost:3000/auth/login', JSON.stringify(credentials), {headers: headers})
                 .subscribe(res => {
                   this.todoService.init(res.json());
                 }, (err) => {

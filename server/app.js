@@ -3,7 +3,8 @@ var PouchDB = require('pouchdb');
 var cors = require('cors');
 var bodyParser = require('body-parser');
 var SuperLogin = require('superlogin');
-var OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
+var passport = require('passport');
+var AzureAdOAuth2Strategy = require('passport-azure-ad-oauth2').Strategy;
 
 var app = express();
 app.use(cors());
@@ -11,7 +12,7 @@ app.use(cors());
 // create application/json parser
 var jsonParser = bodyParser.json();
 
-var config = {
+var configuration = {
   dbServer: {
     protocol: 'http://',
     host: 'localhost:5984',
@@ -47,12 +48,20 @@ var config = {
     }
   },
   providers: {
-    local: true
+    azure: {
+        credentials:{
+            clientID: '3473aac8-046f-4e33-9915-414b2e9ed7da',
+            clientSecret: 'srE/+YkoZk0p?BPLYTh6Vo56FQI[=5pA',
+            callbackURL: 'http://localhost:3000/auth/openid/return',
+            tenant: "mariuszdobrowolskistudentli.onmicrosoft.com"
+        }
+    }
   }
 }
 
 // Initialize SuperLogin
-var superlogin = new SuperLogin(config);
+var superlogin = new SuperLogin(configuration);
+superlogin.registerOAuth2('azure', AzureAdOAuth2Strategy);
 
 // Mount SuperLogin's routes to our app
 app.use('/auth', superlogin.router);
