@@ -14,10 +14,14 @@
 			},
             controller: function($scope){
                 $scope.update = function(task){
-                    $scope.updateTask({task: task});
+                    if($scope.updateTask){
+                        $scope.updateTask({task: task});
+                    }                 
                 };
                 $scope.delete = function(task){
-                    $scope.deleteTask({task: task});  
+                    if($scope.deleteTask){
+                        $scope.deleteTask({task: task});
+                    }  
                 };
             },
 			templateUrl: 'scripts/components/todoList/todoListView.html',

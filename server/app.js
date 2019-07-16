@@ -39,7 +39,7 @@ var configuration = {
   },
   userDBs: {
     defaultDBs: {
-      private: ['supertest']
+      private: ['todo']
     },
     model: {
       supertest: {
@@ -48,6 +48,7 @@ var configuration = {
     }
   },
   providers: {
+    local: true, 
     azure: {
         credentials:{
             clientID: '3473aac8-046f-4e33-9915-414b2e9ed7da',

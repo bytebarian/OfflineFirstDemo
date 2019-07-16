@@ -5,8 +5,7 @@
         .config(['$mdThemingProvider', '$httpProvider', configure])  
         .factory("pouchDB", ["$rootScope", "$q", PouchDBService])
         .run(function(pouchDB) {
-            pouchDB.setDatabase("todos");
-            pouchDB.sync("http://127.0.0.1:5984/todos");
+            pouchDB.initGlobalDatabase("global_todo", "http://127.0.0.1:5984/global_todo");
         })	  
         .controller('TodoController', TodoController);
 
@@ -26,6 +25,7 @@
 		// List of bindable properties and methods
 		var todo = this;
 		todo.tasks = [];
+        todo.globalTasks = [];
 		todo.incompleteTasks = [];
 		todo.completedTasks = [];
 		todo.addTask = addTask;
@@ -38,11 +38,11 @@
         todo.username = "";
         todo.password = "";
         todo.authenticated = false;
-        
-        pouchDB.startListening();
+        todo.login = login;
+        todo.loginazure = loginazure;
         
         $rootScope.$on("$pouchDB:change", function(event, data){
-            tryAddTask(data.doc);
+            tryAddTask(data);
             refreshTasks();
         });
         
@@ -52,6 +52,24 @@
 					todo.tasks.splice(index, 1);
 			});
             refreshTasks();
+        });
+        
+        $rootScope.$on("$pouchDB:changeGlobal", function(event, data){
+            var found = null;
+            todo.globalTasks.forEach(function(task, index, arr) {
+				if (task._id == item._id)
+					found = task;
+			});
+            if(found === null){
+                todo.globalTasks.push(item);
+            }
+        });
+        
+        $rootScope.$on("$pouchDB:deleteGlobal", function(event, data){
+            todo.globalTasks.forEach(function(task, index, arr) {
+				if (task._id == data._id)
+					todo.globalTasks.splice(index, 1);
+			});
         });
         
         function tryAddTask(item){
@@ -124,7 +142,7 @@
             
         }
         
-        todo.login = function login(){
+        function login(){
             let headers = new Headers();
             headers.append('Content-Type', 'application/json');
             
@@ -140,12 +158,38 @@
                   console.log(err);
                 });
         }
+        
+        function loginazure(){
+            $http.post('http://localhost:3000/auth/azure')
+                .subscribe(res => {
+                  this.todoService.init(res.json());
+                }, (err) => {
+                  console.log(err);
+                });
+        }
 
 	}
     
     function PouchDBService($rootScope, $q){
         var database;
         var changeListener;
+        var globalDatabase;
+        var globalChangeListener;
+        
+        this.initGlobalDatabase = function(databaseName, remoteDatabase){
+            globalDatabase = new PouchDB(databaseName);
+            globalDatabase.sync(remoteDatabase, {live: true, retry: true});
+            globalChangeListener = globalDatabase.changes({
+                live: true,
+                include_docs: true
+            }).on("change", function(change) {
+                if(!change.deleted) {
+                    $rootScope.$broadcast("$pouchDB:changeGlobal", change.doc);
+                } else {
+                    $rootScope.$broadcast("$pouchDB:deleteGlobal", change.doc);
+                }
+            });
+        }
 
         this.setDatabase = function(databaseName) {
             database = new PouchDB(databaseName);
@@ -157,7 +201,7 @@
                 include_docs: true
             }).on("change", function(change) {
                 if(!change.deleted) {
-                    $rootScope.$broadcast("$pouchDB:change", change);
+                    $rootScope.$broadcast("$pouchDB:change", change.doc);
                 } else {
                     $rootScope.$broadcast("$pouchDB:delete", change.doc);
                 }
@@ -185,6 +229,7 @@
                         database.get(doc._id)
                         .then(function(dd){
                             doc = dd;
+                            $rootScope.$broadcast("$pouchDB:change", doc);
                         })
                     })
                 })

@@ -24,7 +24,8 @@
 					<input ng-model="todo.password" type="password">
 				</md-input-container>
 
-				<md-button class="md-icon-button md-primary" aria-label="Login" ng-click="todo.login()">Login</md-button>
+				<md-button aria-label="Login" ng-click="todo.login()">Login</md-button>
+                <md-button aria-label="Authenticate with azure AD" ng-click="todo.loginazure()">Authenticate with azure AD</md-button>
 
 		</md-content>
 
@@ -58,6 +59,12 @@
 			<md-button ng-click="todo.toggleCompletedTasks()">{{ todo.showCompleted ? "Hide completed" : "Show completed" }}</md-button>
 			<todo-list tasks="todo.completedTasks" update-task="todo.updateTask(task)" delete-task="todo.deleteTask(task)" ng-show="todo.showCompleted" class="ng-hide"></todo-list>
 		</md-content>
+        <md-content md-theme="docs-dark">
+            <h>GLOBAL TASKS</h>
+		</md-content>
+        <md-content class="content-container" layout="column" layout-align="center center">
+            <todo-list tasks="todo.globalTasks"></todo-list>
+        </md-content>
 	</div>
 
     <script type="text/javascript" src="./node_modules/angular/angular.js"></script>
