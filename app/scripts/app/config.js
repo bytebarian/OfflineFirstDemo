@@ -32,6 +32,7 @@
 		todo.inputTask = "";
 		todo.refreshTasks = refreshTasks;
         todo.updateTask = updateTask;
+        todo.deleteTask = deleteTask;
 		todo.showCompleted = false;
 		todo.toggleCompletedTasks = toggleCompletedTasks;
         
@@ -39,6 +40,14 @@
         
         $rootScope.$on("$pouchDB:change", function(event, data){
             tryAddTask(data.doc);
+            refreshTasks();
+        });
+        
+        $rootScope.$on("$pouchDB:delete", function(event, data){
+            todo.tasks.forEach(function(task, index, arr) {
+				if (task._id == data._id)
+					todo.tasks.splice(index, 1);
+			});
             refreshTasks();
         });
         
@@ -74,6 +83,11 @@
         function updateTask(task){
             console.log(task);            
             pouchDB.update(task);
+        }
+        
+        function deleteTask(task){
+            console.log(task);
+            pouchDB.delete(task);
         }
         
         function error(err) {
@@ -121,7 +135,7 @@
                 if(!change.deleted) {
                     $rootScope.$broadcast("$pouchDB:change", change);
                 } else {
-                    $rootScope.$broadcast("$pouchDB:delete", change);
+                    $rootScope.$broadcast("$pouchDB:delete", change.doc);
                 }
             });
         }
@@ -152,8 +166,12 @@
                 })
         }
 
-        this.delete = function(documentId, documentRevision) {
-            return database.remove(documentId, documentRevision);
+        this.delete = function(doc) {
+            database.get(doc._id)
+                .then(function(d){
+                    database.remove(d);
+                    $rootScope.$broadcast("$pouchDB:delete", doc);
+                })
         }
 
         this.get = function(documentId) {
