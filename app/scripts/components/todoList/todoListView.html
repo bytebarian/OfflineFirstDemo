@@ -2,9 +2,9 @@
 
 	<md-list-item ng-repeat="task in tasks">
 
-		<md-checkbox ng-model="task.completed" ng-change="$parent.update(task)"></md-checkbox>
+		<md-checkbox ng-model="task.completed" ng-change="$parent.update(task)" ng-show="$parent.update"></md-checkbox>
 		<p>{{task.text}}</p>
-        <md-button ng-click="$parent.delete(task)">delete</md-button>
+        <md-button ng-click="$parent.delete(task)" ng-show="$parent.delete">delete</md-button>
 	</md-list-item>
 
 

@@ -40,6 +40,9 @@
         todo.authenticated = false;
         todo.login = login;
         todo.loginazure = loginazure;
+        todo.empty = function(){};
+        
+        pouchDB.startListeningGlobal();
         
         $rootScope.$on("$pouchDB:change", function(event, data){
             tryAddTask(data);
@@ -57,11 +60,11 @@
         $rootScope.$on("$pouchDB:changeGlobal", function(event, data){
             var found = null;
             todo.globalTasks.forEach(function(task, index, arr) {
-				if (task._id == item._id)
+				if (task._id == data._id)
 					found = task;
 			});
             if(found === null){
-                todo.globalTasks.push(item);
+                todo.globalTasks.push(data);
             }
         });
         
@@ -139,10 +142,40 @@
 		}
         
         function init(details){
-            
+            pouchDB.setDatabase("todos");
+            pouchDB.sync(details.userDBs.todo);
+            pouchDB.startListening();
         }
         
         function login(){
+            var getUrl = 'http://localhost:3000/auth/validate-username/' + todo.username;
+            $http.get(getUrl)
+                .then(function(response){
+                    register();
+            }, function(error){
+                authenticate();
+            });
+        }
+        
+        function register(){
+            let headers = new Headers();
+            headers.append('Content-Type', 'application/json');
+            let registerForm ={
+                          "name": "Joe Smith",
+                          "username": todo.username,
+                          "email": todo.username + '@test.pl',
+                          "password": todo.password,
+                          "confirmPassword": todo.password 
+                        };
+            $http.post('http://localhost:3000/auth/register', JSON.stringify(registerForm), {headers: headers})
+                .then(function(response){
+                    authenticate();
+                }, (err) => {
+                  console.log(err);
+                });
+        }
+        
+        function authenticate(){
             let headers = new Headers();
             headers.append('Content-Type', 'application/json');
             
@@ -150,19 +183,19 @@
                 username: todo.username,
                 password: todo.password
             };
-            
             $http.post('http://localhost:3000/auth/login', JSON.stringify(credentials), {headers: headers})
-                .subscribe(res => {
-                  this.todoService.init(res.json());
+                .then(function(response){
+                  init(response.data);
+                  todo.authenticated = true;
                 }, (err) => {
                   console.log(err);
                 });
         }
         
         function loginazure(){
-            $http.post('http://localhost:3000/auth/azure')
-                .subscribe(res => {
-                  this.todoService.init(res.json());
+            $http.get('http://localhost:3000/auth/azure')
+                .then(function(response){
+                  init(response.data);
                 }, (err) => {
                   console.log(err);
                 });
@@ -179,6 +212,9 @@
         this.initGlobalDatabase = function(databaseName, remoteDatabase){
             globalDatabase = new PouchDB(databaseName);
             globalDatabase.sync(remoteDatabase, {live: true, retry: true});
+        }
+        
+        this.startListeningGlobal = function(){
             globalChangeListener = globalDatabase.changes({
                 live: true,
                 include_docs: true
