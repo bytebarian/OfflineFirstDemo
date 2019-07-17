@@ -5,8 +5,8 @@
         .config(['$mdThemingProvider', '$httpProvider', configure])  
         .factory("pouchDB", ["$rootScope", "$q", PouchDBService])
         .run(function(pouchDB) {
-            pouchDB.setDatabase("todos");
-            pouchDB.sync("http://127.0.0.1:5984/todos");
+            pouchDB.setDatabase("todos-admin");
+            pouchDB.sync("http://127.0.0.1:5984/todos-admin");
         })	  
         .controller('TodoController', TodoController);
 
