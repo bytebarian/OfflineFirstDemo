@@ -5,6 +5,9 @@
   "author": "Vjekoslav Ratkajec <vjeko@creaticon.hr>",
   "main": "main.js",
   "license": "MIT",
+  "scripts": {
+    "dev": "lite-server -c bs-config.json"
+  },
   "dependencies": {
     "angular": "^1.5.5",
     "angular-animate": "^1.5.5",
