@@ -88,7 +88,6 @@ function flushQueue() {
 }
 
 function enqueue(request) {
-  importScripts('./localforage.js');
   return serialize(request).then(function(serialized) {
     localforage.getItem('queue').then(function(queue) {
       queue = queue || [];
@@ -127,6 +126,7 @@ function checkServerHeartbeat(){
 }
 
 self.addEventListener('install', function(event) {
+  importScripts('./localforage.js');
     event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
