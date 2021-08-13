@@ -4,18 +4,18 @@
 
 var CACHE_NAME = 'demo-dependencies-cache';
 var REQUIRED_FILES = [
-    '/app/index.html',
-    '/app/index.js',
-    '/app/node_modules/angular-material/angular-material.css',
-    '/app/styles/app.css',
-    '/app/node_modules/angular/angular.js',
-    '/app/node_modules/angular-aria/angular-aria.js',
-    '/app/node_modules/angular-animate/angular-animate.js',
-    '/app/node_modules/angular-material/angular-material.js',
-    '/app/scripts/app/todoController.js',
-    '/app/scripts/app/config.js',
-    '/app/scripts/components/todoList/todoListDirective.js',
-    '/app/scripts/components/todoList/todoListView.html'
+    '/index.html',
+    '/index.js',
+    '/node_modules/angular-material/angular-material.css',
+    '/styles/app.css',
+    '/node_modules/angular/angular.js',
+    '/node_modules/angular-aria/angular-aria.js',
+    '/node_modules/angular-animate/angular-animate.js',
+    '/node_modules/angular-material/angular-material.js',
+    '/scripts/app/todoController.js',
+    '/scripts/app/config.js',
+    '/scripts/components/todoList/todoListDirective.js',
+    '/scripts/components/todoList/todoListView.html'
 ];
 
 var RESPONSE_TO_CACHE = [
