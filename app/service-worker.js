@@ -154,8 +154,7 @@ self.addEventListener('fetch', function(event) {
                         console.log('[fetch] Cache json result for url: ' + event.request.url);
                         return response;
                    })});
-              });
-              } 
+              }
               else {
                   return cache || fetch(event.request);
               }
